@@ -10,6 +10,7 @@ import org.codenova.groupware.repository.DepartmentRepository;
 import org.codenova.groupware.repository.EmployeeRepository;
 import org.codenova.groupware.repository.SerialRepository;
 import org.codenova.groupware.request.AddEmployee;
+import org.codenova.groupware.request.LoginRequest;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -81,12 +82,18 @@ public class EmployeeController {
         return ResponseEntity.status(200).body(employee.get());
     }
 
-    @PostMapping
-    public ResponseEntity<Employee> loginEmployeeHandle(@PathVariable String id, @PathVariable String password) {
-        Optional<Employee> employee = employeeRepository.findById(id);//password 수정중
-        if(employee.isEmpty()) {
+    @PostMapping("/login")
+    public ResponseEntity<Employee> loginEmployeeHandle(@RequestBody LoginRequest loginRequest) {
+        Optional<Employee> employeeOptional = employeeRepository.findById(loginRequest.getId());//password 수정중
+        if(employeeOptional.isEmpty()) {
             return ResponseEntity.status(404).body(null);
         }
-        return ResponseEntity.status(200).body(employee.get());
+
+        Employee employee = employeeOptional.get();
+
+        if(!employee.getPassword().equals(loginRequest.getPassword())) { //비밀번호가 로그인 리퀘스트 번호랑 일치 하지 않으면
+            return ResponseEntity.status(401).body(null); //비밀번호 불일치시
+        }
+        return ResponseEntity.status(200).body(employee);
     }
 }
