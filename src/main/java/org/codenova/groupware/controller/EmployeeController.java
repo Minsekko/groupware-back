@@ -27,13 +27,18 @@ import java.util.Optional;
 @Slf4j
 public class EmployeeController {
     private final EmployeeRepository employeeRepository;
-    private final DepartmentController departmentController;
     private final SerialRepository serialRepository;
     private final DepartmentRepository departmentRepository;
 
+    @GetMapping
+    public ResponseEntity<List<Employee>> getEmployeeHandle(){
+        List<Employee> list = employeeRepository.findAll();
+        return ResponseEntity.status(200).body(list);
+    }
+
     @PostMapping
     @Transactional
-    public ResponseEntity<Employee> postEmployeeHandle(@ModelAttribute @Valid
+    public ResponseEntity<Employee> postEmployeeHandle(@RequestBody @Valid  //@RequestBody json 형태를 받을때 써준다
                                                             AddEmployee addEmployee,
                                                         BindingResult result ){
         if(result.hasErrors()) {
@@ -41,7 +46,7 @@ public class EmployeeController {
         }
 
         //1.사원번호 생성, 부서객체
-        Optional<Serial> serial = serialRepository.findById(1); //jpa 만들때 optional만든다
+        Optional<Serial> serial = serialRepository.findByRef("employee"); //jpa 만들때 optional만든다
         //jpa에서 id로 찾는걸 기본으로 제공을 해주는데, 결과가 optional 객체가 나옴
 
         Optional<Department> department = departmentRepository.findById(addEmployee.getDepartmentId()); //부서에서 ID를 찾아 부서를 만들어줘야 해서 find해온다
@@ -82,18 +87,20 @@ public class EmployeeController {
         return ResponseEntity.status(200).body(employee.get());
     }
 
-    @PostMapping("/login")
-    public ResponseEntity<Employee> loginEmployeeHandle(@RequestBody LoginRequest loginRequest) {
+    @PostMapping("/verify")
+    public ResponseEntity<Employee> verifyHandle(@RequestBody @Valid LoginRequest loginRequest, BindingResult result) {
+
+        if (result.hasErrors()){
+            return ResponseEntity.status(400).body(null);
+        }
+
         Optional<Employee> employeeOptional = employeeRepository.findById(loginRequest.getId());//password 수정중
-        if(employeeOptional.isEmpty()) {
-            return ResponseEntity.status(404).body(null);
+        if(employeeOptional.isEmpty() || !BCrypt.checkpw(loginRequest.getPassword(), employeeOptional.get().getPassword())) {
+            return ResponseEntity.status(401).body(null);
         }
 
         Employee employee = employeeOptional.get();
 
-        if(!employee.getPassword().equals(loginRequest.getPassword())) { //비밀번호가 로그인 리퀘스트 번호랑 일치 하지 않으면
-            return ResponseEntity.status(401).body(null); //비밀번호 불일치시
-        }
         return ResponseEntity.status(200).body(employee);
     }
 }

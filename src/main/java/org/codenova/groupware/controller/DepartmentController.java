@@ -20,7 +20,7 @@ import java.util.List;
 @RequiredArgsConstructor  //변수만 생성하고 사용하는 생성자가 필요해서 (final생성일때) AllArgs도 가능하다
 public class DepartmentController {
 
-    private final DepartmentRepository departmentRepository;
+    private final DepartmentRepository departmentRepository;  //final 붙이는 이유는 생성자를 받아야 하는 입장일때 사용한다
     @GetMapping
     public ResponseEntity<List<Department>> getDepartmentHandle(){  //ResponseEntity 상태코드도 확인해야 하기 때문데 ResponseEntity 감싸서 넣어야 한다
         List<Department> list = departmentRepository.findAll();
