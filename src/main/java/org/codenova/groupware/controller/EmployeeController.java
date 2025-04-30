@@ -1,5 +1,7 @@
 package org.codenova.groupware.controller;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,12 +13,14 @@ import org.codenova.groupware.repository.EmployeeRepository;
 import org.codenova.groupware.repository.SerialRepository;
 import org.codenova.groupware.request.AddEmployee;
 import org.codenova.groupware.request.LoginRequest;
+import org.codenova.groupware.response.LoginResult;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.AlgorithmConstraints;
 import java.util.List;
 import java.util.Optional;
 
@@ -88,7 +92,7 @@ public class EmployeeController {
     }
 
     @PostMapping("/verify")
-    public ResponseEntity<Employee> verifyHandle(@RequestBody @Valid LoginRequest loginRequest, BindingResult result) {
+    public ResponseEntity<LoginResult> verifyHandle(@RequestBody @Valid LoginRequest loginRequest, BindingResult result) {
 
         if (result.hasErrors()){
             return ResponseEntity.status(400).body(null);
@@ -98,9 +102,13 @@ public class EmployeeController {
         if(employeeOptional.isEmpty() || !BCrypt.checkpw(loginRequest.getPassword(), employeeOptional.get().getPassword())) {
             return ResponseEntity.status(401).body(null);
         }
-
         Employee employee = employeeOptional.get();
 
-        return ResponseEntity.status(200).body(employee);
+        String token = JWT.create().withIssuer("groupware")
+                .withSubject(employeeOptional.get().getId()).sign(Algorithm.HMAC256("groupware"));
+
+        LoginResult loginResult = LoginResult.builder().token(token).employee(employeeOptional.get()).build();
+
+        return ResponseEntity.status(200).body(loginResult);
     }
 }
