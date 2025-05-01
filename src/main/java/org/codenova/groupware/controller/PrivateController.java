@@ -11,6 +11,7 @@ import org.codenova.groupware.entity.Employee;
 import org.codenova.groupware.repository.EmployeeRepository;
 import org.codenova.groupware.request.ChangePassword;
 import org.mindrot.jbcrypt.BCrypt;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.Nullable;
 import org.springframework.validation.BindingResult;
@@ -29,23 +30,8 @@ public class PrivateController {
     // 우리나라 개발자들은 보통은 put으로 처리를 하는 경우가 많음.
     @PutMapping("/change-password")
     public ResponseEntity<?> patchChangePasswordHandle(
-            @RequestHeader("Authorization") @Nullable String token,
+            @RequestAttribute("subject") String subject,
             @RequestBody @Valid ChangePassword changePassword, BindingResult bindResult) {
-
-        if(token == null || !token.startsWith("Bearer ")) {
-            return ResponseEntity.status(401).body(null);
-        }
-        token = token.replace("Bearer ", "");
-
-        String subject = null;
-        try {
-            JWTVerifier verifier = JWT.require(Algorithm.HMAC256("groupware")).withIssuer("groupware").build();
-
-            DecodedJWT jwt = verifier.verify(token);
-            subject = jwt.getSubject(); //토큰을 발부했던 사용자가 나온다
-        }catch (Exception e) {
-            return ResponseEntity.status(401).body(null); //실패하면 401에러가 날라갈거임
-        }
 
         // if 바인딩리절트 에러 있으면 400번 응답
         if(bindResult.hasErrors()) {

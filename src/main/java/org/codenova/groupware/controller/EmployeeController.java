@@ -15,6 +15,7 @@ import org.codenova.groupware.request.AddEmployee;
 import org.codenova.groupware.request.LoginRequest;
 import org.codenova.groupware.response.LoginResult;
 import org.mindrot.jbcrypt.BCrypt;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BindingResult;
@@ -33,6 +34,9 @@ public class EmployeeController {
     private final EmployeeRepository employeeRepository;
     private final SerialRepository serialRepository;
     private final DepartmentRepository departmentRepository;
+
+    @Value("${secret}") //springframwork 패키지의 value 어노테이션
+    private String secret;
 
     @GetMapping
     public ResponseEntity<List<Employee>> getEmployeeHandle(){
@@ -104,8 +108,9 @@ public class EmployeeController {
         }
         Employee employee = employeeOptional.get();
 
-        String token = JWT.create().withIssuer("groupware")
-                .withSubject(employeeOptional.get().getId()).sign(Algorithm.HMAC256("groupware"));
+        String token = JWT.create().withIssuer("groupware") //토큰 발급처 - 프로젝트 이름
+                .withSubject(employeeOptional.get().getId()) //토큰발부대상 - 로그인 승인자 아이디
+                .sign(Algorithm.HMAC256(secret)); //위조변증에 사용될 알고리즘(암호키)
 
         LoginResult loginResult = LoginResult.builder().token(token).employee(employeeOptional.get()).build();
 
