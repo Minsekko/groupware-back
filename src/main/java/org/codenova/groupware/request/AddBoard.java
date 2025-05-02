@@ -12,8 +12,6 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AddBoard {
-    @NotNull
-    private String writerId;
 
     @NotBlank
     private String title;

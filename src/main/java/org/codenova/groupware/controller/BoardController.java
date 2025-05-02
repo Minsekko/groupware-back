@@ -9,6 +9,7 @@ import org.codenova.groupware.entity.Employee;
 import org.codenova.groupware.repository.BoardRepository;
 import org.codenova.groupware.repository.EmployeeRepository;
 import org.codenova.groupware.request.AddBoard;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BindingResult;
@@ -32,7 +33,7 @@ public class BoardController {
 
     @GetMapping
     public ResponseEntity<List<Board>> getBoardHandle(){
-        List<Board> list = boardRepository.findAll();
+        List<Board> list = boardRepository.findAll(Sort.by("id").descending());
         return ResponseEntity.status(200).body(list);
     }
 
@@ -47,13 +48,13 @@ public class BoardController {
 
     @PostMapping
     @Transactional
-    public ResponseEntity<?> postBoardHandle(@RequestBody @Valid
+    public ResponseEntity<?> postBoardHandle(@RequestAttribute String subject,@RequestBody @Valid
                                              AddBoard addBoard, BindingResult result){
 
         if (result.hasErrors()) {
             return ResponseEntity.status(400).body("입력 값 오류");
         }
-        Optional<Employee> WriterId = employeeRepository.findById(addBoard.getWriterId());
+        Optional<Employee> WriterId = employeeRepository.findById(subject);
         if (WriterId.isEmpty()) {
             return ResponseEntity.status(400).body("유효하지 않은 작성자 ID 입니다.");
         }

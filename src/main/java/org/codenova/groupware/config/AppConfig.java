@@ -16,7 +16,7 @@ public class AppConfig implements WebMvcConfigurer {
 //        System.out.println("!!!");
         // 패턴표기는 ant 표기법 공부
         // 여러 패턴을 동시에 지정하고 싶으면 ,로 여러개 지정하면 된다
-        registry.addInterceptor(authInterceptor).addPathPatterns("/api/private/**","/api/public/**");
+        registry.addInterceptor(authInterceptor).addPathPatterns("/api/private/**","/api/board/**","/api/note/**");
         //
     }
 
