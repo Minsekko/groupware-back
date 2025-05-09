@@ -17,6 +17,7 @@ import org.codenova.groupware.response.LoginResult;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
@@ -31,9 +32,11 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Slf4j
 public class EmployeeController {
+
     private final EmployeeRepository employeeRepository;
     private final SerialRepository serialRepository;
     private final DepartmentRepository departmentRepository;
+    private final SimpMessagingTemplate simpMessagingTemplate;
 
     @Value("${secret}") //springframwork 패키지의 value 어노테이션
     private String secret;
@@ -113,7 +116,7 @@ public class EmployeeController {
                 .sign(Algorithm.HMAC256(secret)); //위조변증에 사용될 알고리즘(암호키)
 
         LoginResult loginResult = LoginResult.builder().token(token).employee(employeeOptional.get()).build();
-
+        simpMessagingTemplate.convertAndSend("/notice",employeeOptional.get().getId()+" 로그인 하였습니다.");
         return ResponseEntity.status(200).body(loginResult);
     }
 }

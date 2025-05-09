@@ -9,8 +9,12 @@ import org.codenova.groupware.entity.Employee;
 import org.codenova.groupware.repository.BoardRepository;
 import org.codenova.groupware.repository.EmployeeRepository;
 import org.codenova.groupware.request.AddBoard;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.Nullable;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
@@ -30,11 +34,15 @@ public class BoardController {
 
     private final BoardRepository boardRepository;
     private final EmployeeRepository employeeRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @GetMapping
-    public ResponseEntity<List<Board>> getBoardHandle(){
-        List<Board> list = boardRepository.findAll(Sort.by("id").descending());
-        return ResponseEntity.status(200).body(list);
+    public ResponseEntity<?> getBoardHandle(@RequestParam(name = "p") Optional<Integer> p){
+        //List<Board> list = boardRepository.findAll(Sort.by("id").descending());
+        int pageNumber = p.orElse(1);
+        pageNumber = Math.max(pageNumber,1);
+        Page<Board> boards = boardRepository.findAll(PageRequest.of(pageNumber-1,10));  //첫번째 인자가 페이지번호, 두번째 인자가 몇개씩 페이징 처리 할껀지
+        return ResponseEntity.status(200).body(boards);
     }
 
     @GetMapping("/{id}")
@@ -67,6 +75,7 @@ public class BoardController {
                 .build();
 
         boardRepository.save(board);
+        messagingTemplate.convertAndSend("/notice", "새글이 등록 되었습니다.");
         return ResponseEntity.status(201).body(board);
     }
 }
